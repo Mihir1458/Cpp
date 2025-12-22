@@ -1,60 +1,52 @@
 #include<iostream>
-#include<string>
-
 using namespace std;
-class Bin 
-{
-    private:
-    string s;
+class b1;
+class a1{
+    int a;
+    friend void swaing(a1 &,b1 &);
     public:
-    void read();
-    void chk_bin();
-    void ones_compliment();
-    void display(); 
+    void get(int m)
+    {
+        a=m;
+    }
+    void out()
+    {
+        cout<<"The value of the first number is :- "<<a<<endl;
+    }
 };
-void Bin::read()
-{
-    cout << "Enter a binary number" << endl;
-    cin >> s;
-}
-void Bin::chk_bin()
-{
-    for(int i=0;i<s.length();i++)
+class b1{
+    int b;
+    
+    friend void swaing(a1 &,b1 &);
+    public:
+    void get(int n)
     {
-        if(s.at(i)!='0' && s.at(i)!='1')
-        {
-            cout << "Invalid binary number" << endl;
-            exit(0);
-        }
+        b=n;
     }
-}
-void Bin::ones_compliment()
-{
-    for(int i=0;i<s.length();i++)
+    void out()
     {
-        if(s.at(i)=='0')
-        {
-            s.at(i)='1';
-        }
-        else
-        {
-            s.at(i)='0';
-        }
+        cout<<"The value of the first number is :- "<<b<<endl;
     }
-}
-void Bin::display()
+};
+void swaing(a1 &c, b1 &d)
 {
-    for(int i=0;i<s.length();i++)
-    {
-        cout << s.at(i);
-    }
+int temp;
+temp=c.a;
+c.a=d.b;
+d.b=temp;
 }
 int main()
 {
-    Bin b;
-    b.read();
-    b.chk_bin();
-    b.ones_compliment();
-    b.display();
-    return 0;
+     a1 p;  
+     b1 k;
+    p.get(90);
+    p.out();
+    k.get(55);
+    k.out();
+    
+    swaing(p,k);
+    p.out();
+    k.out();
+   return 0; 
+
 }
