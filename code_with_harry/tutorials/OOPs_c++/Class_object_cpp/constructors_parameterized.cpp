@@ -17,8 +17,7 @@ demo2::demo2(int x,int y) // ----> This is a parameterized constructor as it tak
 }
 int main()
 {
-    demo2 d1(4,5);
-    demo2 d2(7,8);
+    demo2 d1(4,5), d2(7,8);
     d1.printNumber();
     d2.printNumber();
     return 0;

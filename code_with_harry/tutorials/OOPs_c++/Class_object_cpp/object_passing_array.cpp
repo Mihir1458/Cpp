@@ -21,10 +21,10 @@ public:
     {
         cout << "Your complex numbers id :- " << a << "+" << b << "i" << endl;
     }
-};  
+};
 int main()
 {
-    complex a, b,c;
+    complex a, b, c;
     a.getnum(1, 2);
     a.print();
     b.getnum(3, 4);

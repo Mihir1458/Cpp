@@ -3,8 +3,8 @@ using namespace std;
 class calc; //forward declaration
 class complex{
     int a,b;
-    friend class calc;
     public:
+    friend class calc;
     void set(int x,int y)
     {
         a=x;
