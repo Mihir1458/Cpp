@@ -1,0 +1,339 @@
+// ============================================================================
+// DEBUG CONFIGURATION 
+// ============================================================================
+#define DEBUG_ENABLED false
+#define DEBUG_PRINT(x) if(DEBUG_ENABLED) Serial.print(x)
+#define DEBUG_PRINTLN(x) if(DEBUG_ENABLED) Serial.println(x)
+
+// ============================================================================
+// PIN DEFINITIONS
+// ============================================================================
+
+// Motor A (Left Motor)
+#define PWMA 25
+#define AIN1 26
+#define AIN2 27
+
+// Motor B (Right Motor)
+#define PWMB 14
+#define BIN1 32
+#define BIN2 13
+
+// Motor Driver Standby
+#define STBY 33
+
+// THREE ULTRASONIC SENSORS
+#define TRIG_LEFT 4
+#define ECHO_LEFT 5
+
+#define TRIG_CENTER 21
+#define ECHO_CENTER 22
+
+#define TRIG_RIGHT 18
+#define ECHO_RIGHT 19
+
+// IR Sensors (Active LOW)
+#define IR_LEFT 34
+#define IR_RIGHT 35
+
+// ============================================================================
+// PWM CONFIGURATION
+// ============================================================================
+#define PWM_FREQ 20000
+#define PWM_RESOLUTION 8
+
+// ============================================================================
+// TUNABLE PARAMETERS
+// ============================================================================
+
+#define MOTOR_SPEED_L 167
+#define MOTOR_SPEED_R 170
+#define TURN_SPEED 190
+#define REVERSE_SPEED_L 150
+#define REVERSE_SPEED_R 150
+
+#define STOP_DISTANCE 17
+#define REVERSE_DISTANCE 15
+#define MIN_SAFE_DISTANCE 20
+#define INVALID_READING_THRESHOLD 500
+
+#define TURN_90_TIME 360
+#define REVERSE_TIME 300
+#define CHECK_INTERVAL 200
+#define AFTER_TURN_DELAY 500
+#define AFTER_REVERSE_DELAY 600
+#define AFTER_SCAN_DELAY 300
+#define SENSOR_DELAY 100
+
+// 🔥 0 SECOND CALIBRATION
+#define CALIBRATION_DELAY 100
+
+#define SENSOR_SAMPLES 5
+#define SAMPLE_DELAY 30
+
+// ============================================================================
+// GLOBAL VARIABLES
+// ============================================================================
+unsigned long lastCheck = 0;
+bool isNavigating = false;
+unsigned long loopCount = 0;
+unsigned long lastValidCenterReading = 0;
+
+// ============================================================================
+// SETUP (NO CALIBRATION WAIT)
+// ============================================================================
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(STBY, OUTPUT);
+  pinMode(AIN1, OUTPUT);
+  pinMode(AIN2, OUTPUT);
+  pinMode(BIN1, OUTPUT);
+  pinMode(BIN2, OUTPUT);
+
+  ledcAttach(PWMA, PWM_FREQ, PWM_RESOLUTION);
+  ledcAttach(PWMB, PWM_FREQ, PWM_RESOLUTION);
+  digitalWrite(STBY, HIGH);
+
+  pinMode(TRIG_LEFT, OUTPUT);
+  pinMode(ECHO_LEFT, INPUT);
+  pinMode(TRIG_CENTER, OUTPUT);
+  pinMode(ECHO_CENTER, INPUT);
+  pinMode(TRIG_RIGHT, OUTPUT);
+  pinMode(ECHO_RIGHT, INPUT);
+
+  pinMode(IR_LEFT, INPUT);
+  pinMode(IR_RIGHT, INPUT);
+
+  // 🚀 START IMMEDIATELY
+  startForward();
+}
+
+// ============================================================================
+// MAIN LOOP
+// ============================================================================
+void loop() {
+  loopCount++;
+  bool leftWall = !digitalRead(IR_LEFT);
+  bool rightWall = !digitalRead(IR_RIGHT);
+
+
+  if (millis() - lastCheck >= CHECK_INTERVAL) {
+    lastCheck = millis();
+
+    float r1 = measureDistance(TRIG_CENTER, ECHO_CENTER);
+    delay(50);
+    float r2 = measureDistance(TRIG_CENTER, ECHO_CENTER);
+    delay(50);
+    float r3 = measureDistance(TRIG_CENTER, ECHO_CENTER);
+
+    float distance = median3(r1, r2, r3);
+  
+
+  
+      
+
+
+  if (leftWall !=0 && rightWall !=0) {
+    stopMotors();
+    delay(100);
+    reverseMotors();
+    delay(REVERSE_TIME);
+  }
+  else if (leftWall !=0) {
+    ledcWrite(PWMA, 110);
+    ledcWrite(PWMB, MOTOR_SPEED_R);
+    delay(100);
+  }
+  else if (rightWall !=0) {
+    ledcWrite(PWMA, MOTOR_SPEED_L);
+    ledcWrite(PWMB, 110);
+    delay(100);
+  }
+
+if (distance > 0 && distance < STOP_DISTANCE) {
+      if (distance < REVERSE_DISTANCE) {
+        stopMotors();
+        delay(150);
+        reverseMotors();
+        delay(REVERSE_TIME);
+        stopMotors();
+        delay(AFTER_REVERSE_DELAY);
+      } else {
+        stopMotors();
+        delay(250);
+      }
+
+      delay(AFTER_SCAN_DELAY);
+
+      float distances[3];
+      scanAllDirections(distances);
+      makeDecision(distances);
+
+      delay(400);
+      startForward();
+      
+      loopCount = 0;
+    }
+  }
+}
+     
+  
+
+
+// ============================================================================
+// UTILITY
+// ============================================================================
+float median3(float a, float b, float c) {
+  if ((a <= b && b <= c) || (c <= b && b <= a)) return b;
+  if ((b <= a && a <= c) || (c <= a && a <= b)) return a;
+  return c;
+}
+
+// ============================================================================
+// IR SENSOR HANDLING
+// ============================================================================
+
+
+// ============================================================================
+// MOTOR CONTROL
+// ============================================================================
+void startForward() {
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, LOW);
+  ledcWrite(PWMA, MOTOR_SPEED_L);
+  digitalWrite(BIN1, HIGH);
+  digitalWrite(BIN2, LOW);
+  ledcWrite(PWMB, MOTOR_SPEED_R);
+}
+
+void stopMotors() {
+  ledcWrite(PWMA, 0);
+  ledcWrite(PWMB, 0);
+}
+
+void reverseMotors() {
+  digitalWrite(AIN1, LOW);
+  digitalWrite(AIN2, HIGH);
+  ledcWrite(PWMA, REVERSE_SPEED_L);
+  digitalWrite(BIN1, LOW);
+  digitalWrite(BIN2, HIGH);
+  ledcWrite(PWMB, REVERSE_SPEED_R);
+}
+
+void turnLeft() {
+  digitalWrite(AIN1, LOW);
+  digitalWrite(AIN2, HIGH);
+  ledcWrite(PWMA, TURN_SPEED);
+  digitalWrite(BIN1, HIGH);
+  digitalWrite(BIN2, LOW);
+  ledcWrite(PWMB, TURN_SPEED);
+  delay(TURN_90_TIME);
+  stopMotors();
+  delay(AFTER_TURN_DELAY);
+}
+
+void turnRight() {
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, LOW);
+  ledcWrite(PWMA, TURN_SPEED);
+  digitalWrite(BIN1, LOW);
+  digitalWrite(BIN2, HIGH);
+  ledcWrite(PWMB, TURN_SPEED);
+  delay(TURN_90_TIME);
+  stopMotors();
+  delay(AFTER_TURN_DELAY);
+}
+
+void turnAround() {
+  turnRight();
+  turnRight();
+}
+
+// ============================================================================
+// SENSOR FUNCTIONS
+// ============================================================================
+float measureDistance(int trigPin, int echoPin) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(5);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  long duration = pulseIn(echoPin, HIGH, 40000);
+  if (duration == 0) return 999.0;
+
+  float distance = (duration / 2.0) * 0.0343;
+  if (distance > 800 || distance < 1) return 999.0;
+  return distance;
+}
+
+float measureDistanceAverage(int trigPin, int echoPin) {
+  float readings[SENSOR_SAMPLES];
+  for (int i = 0; i < SENSOR_SAMPLES; i++) {
+    readings[i] = measureDistance(trigPin, echoPin);
+    delay(SAMPLE_DELAY);
+  }
+  return readings[SENSOR_SAMPLES / 2];
+}
+
+void scanAllDirections(float distances[3]) {
+  delay(SENSOR_DELAY);
+  distances[0] = measureDistanceAverage(TRIG_LEFT, ECHO_LEFT);
+  delay(SENSOR_DELAY);
+  distances[1] = measureDistanceAverage(TRIG_CENTER, ECHO_CENTER);
+  delay(SENSOR_DELAY);
+  distances[2] = measureDistanceAverage(TRIG_RIGHT, ECHO_RIGHT);
+}
+
+// ============================================================================
+// DECISION LOGIC
+// ============================================================================
+void makeDecision(float distances[3]) {
+  float leftDist =distance[0];
+  float centerDist =distance[1];
+  float rightDist =distance[2];
+  float max = 0;
+  int maxIndex = 1;
+
+  for (int i = 0; i < 3; i++) {
+    if (distances[i] < INVALID_READING_THRESHOLD && distances[i] > max) {
+      max = distances[i];
+      maxIndex = i;
+    }
+  }
+
+  
+
+  
+  DEBUG_PRINTLN("\n[DECISION] Checking options in priority order:");
+  
+  
+    // Option 1: LEFT - Highest priority in left-hand rule
+    if (centerDist >= max) {
+      startForward();
+    }
+    // Option 2: CENTER - Continue straight if left not available
+    else if (leftDist >= max) {
+      DEBUG_PRINTLN("  ✓ Option 1: LEFT path is OPEN and safe");
+      DEBUG_PRINTLN("[DECISION] → TURNING LEFT (following left-hand rule)\n");
+      turnRight();
+    }
+    // Option 3: RIGHT - Only if left and center not available
+    else if (rightDist >= max) {
+      DEBUG_PRINTLN("  ✗ Option 1: LEFT not available");
+      DEBUG_PRINTLN("  ✗ Option 2: CENTER blocked");
+      DEBUG_PRINTLN("  ✓ Option 3: RIGHT path is OPEN and safe");
+      DEBUG_PRINTLN("[DECISION] → TURNING RIGHT\n");
+      turnLeft();
+    }
+    // Option 4: Dead end - all paths blocked
+    else {
+      DEBUG_PRINTLN("  ✗ Option 1: LEFT not available");
+      DEBUG_PRINTLN("  ✗ Option 2: CENTER blocked");
+      DEBUG_PRINTLN("  ✗ Option 3: RIGHT not available");
+      DEBUG_PRINTLN("  ! All paths blocked - DEAD END");
+      DEBUG_PRINTLN("[DECISION] → U-TURN (180°)\n");
+      turnAround();
+    }
+}
