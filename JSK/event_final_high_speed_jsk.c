@@ -42,7 +42,7 @@
 // ============================================================================
 // PWM CONFIGURATION
 // ============================================================================
-#define PWM_FREQ 15000
+#define PWM_FREQ 12000
 #define PWM_RESOLUTION 8
 
 // ============================================================================
@@ -51,22 +51,22 @@
 
 // Motor Speeds
 
-#define MOTOR_SPEED_L 211.25
-#define MOTOR_SPEED_R 195.5
-#define TURN_SPEED 190
-#define REVERSE_SPEED_L 169
-#define REVERSE_SPEED_R 215.05
+#define MOTOR_SPEED_L 235.53
+#define MOTOR_SPEED_R 220.32
+#define TURN_SPEED 245
+#define REVERSE_SPEED_L 210.25
+#define REVERSE_SPEED_R 196.2
 
 // Distance Thresholds (cm)
-#define STOP_DISTANCE 21
-#define REVERSE_DISTANCE 12
-#define MIN_SAFE_DISTANCE 17
+#define STOP_DISTANCE 23
+#define REVERSE_DISTANCE 11
+#define MIN_SAFE_DISTANCE 19
 
 // Timing
-#define TURN_90_TIME 110
-#define TURN_IR 73
+#define TURN_90_TIME 150
+#define TURN_IR 63
 #define REVERSE_TIME 120
-#define CHECK_INTERVAL 150
+#define CHECK_INTERVAL 120
 
 // ============================================================================
 // GLOBAL VARIABLES
@@ -202,6 +202,7 @@ void loop() {
       
       delay(TURN_IR);
       startForward();
+      delay(50);
       
     }
     else if (leftWall != 0) {
@@ -218,6 +219,7 @@ void loop() {
       
       delay(TURN_IR);
       startForward();
+      delay(50);
       
     }
     
@@ -349,10 +351,11 @@ void turnAround() {
 }
 
 // ============================================================================
-// SENSOR FUNCTIONS - 3 ULTRASONIC SENSORS
+// SENSOR FUNCTIONS - IMPROVED WITH MULTIPLE READINGS
 // ============================================================================
 
-float measureDistance(int trigPin, int echoPin) {
+// Helper function to take single raw reading
+float getSingleReading(int trigPin, int echoPin) {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -362,47 +365,95 @@ float measureDistance(int trigPin, int echoPin) {
   long duration = pulseIn(echoPin, HIGH, 10000);
   
   if (duration == 0) {
-  return 999;   // treat as OPEN space
+    return 999;   // treat as OPEN space
+  }
+
+  float distance = (duration / 2.0) * 0.0343;
+
+  if (distance <= 0 || distance > 400) {
+    return 400;   // invalid or too far
+  }
+
+  return distance;
 }
 
-float distance = (duration / 2.0) * 0.0343;
-
-if (distance <= 0 || distance > 400) {
-  return 400;   // invalid or too far
+// Helper function to sort 3 values for median calculation
+void sortThree(float arr[3]) {
+  if (arr[0] > arr[1]) {
+    float temp = arr[0];
+    arr[0] = arr[1];
+    arr[1] = temp;
+  }
+  if (arr[1] > arr[2]) {
+    float temp = arr[1];
+    arr[1] = arr[2];
+    arr[2] = temp;
+  }
+  if (arr[0] > arr[1]) {
+    float temp = arr[0];
+    arr[0] = arr[1];
+    arr[1] = temp;
+  }
 }
 
-return distance;
-
+// Main distance measurement function with 3 readings and median filter
+float measureDistance(int trigPin, int echoPin) {
+  float readings[3];
+  
+  // Take 3 readings
+  for(int i = 0; i < 3; i++) {
+    readings[i] = getSingleReading(trigPin, echoPin);
+    if(i < 2) {  // Don't delay after last reading
+      delay(10);  // Small delay between readings
+    }
+  }
+  
+  // Sort and return median (middle value)
+  sortThree(readings);
+  
+  #if DEBUG_ENABLED
+  Serial.print("    [Readings: ");
+  Serial.print(readings[0]);
+  Serial.print(", ");
+  Serial.print(readings[1]);
+  Serial.print(", ");
+  Serial.print(readings[2]);
+  Serial.print(" → Median: ");
+  Serial.print(readings[1]);
+  Serial.println("]");
+  #endif
+  
+  return readings[1];  // Return median value
 }
 
 void scanAllDirections(float distances[3]) {
   DEBUG_PRINTLN("\n[SCAN] ========== 3-WAY SCAN (SIMULTANEOUS) ==========");
   
   // Small delay between sensor readings to avoid interference
-  delay(40);
+  delay(60);
   
-  // Scan LEFT sensor
-  DEBUG_PRINTLN("[SCAN] Reading LEFT sensor...");
+  // Scan LEFT sensor (now takes 3 readings internally)
+  DEBUG_PRINTLN("[SCAN] Reading LEFT sensor (3 samples)...");
   distances[0] = measureDistance(TRIG_LEFT, ECHO_LEFT);
-  DEBUG_PRINT("  Distance: ");
+  DEBUG_PRINT("  Final Distance: ");
   DEBUG_PRINT(distances[0]);
   DEBUG_PRINTLN(" cm");
   
-  delay(40);  // Small delay to prevent ultrasonic interference
+  delay(60);  // Small delay to prevent ultrasonic interference
   
-  // Scan CENTER sensor
-  DEBUG_PRINTLN("[SCAN] Reading CENTER sensor...");
+  // Scan CENTER sensor (now takes 3 readings internally)
+  DEBUG_PRINTLN("[SCAN] Reading CENTER sensor (3 samples)...");
   distances[1] = measureDistance(TRIG_CENTER, ECHO_CENTER);
-  DEBUG_PRINT("  Distance: ");
+  DEBUG_PRINT("  Final Distance: ");
   DEBUG_PRINT(distances[1]);
   DEBUG_PRINTLN(" cm");
   
-  delay(40);  // Small delay to prevent ultrasonic interference
+  delay(60);  // Small delay to prevent ultrasonic interference
   
-  // Scan RIGHT sensor
-  DEBUG_PRINTLN("[SCAN] Reading RIGHT sensor...");
+  // Scan RIGHT sensor (now takes 3 readings internally)
+  DEBUG_PRINTLN("[SCAN] Reading RIGHT sensor (3 samples)...");
   distances[2] = measureDistance(TRIG_RIGHT, ECHO_RIGHT);
-  DEBUG_PRINT("  Distance: ");
+  DEBUG_PRINT("  Final Distance: ");
   DEBUG_PRINT(distances[2]);
   DEBUG_PRINTLN(" cm");
   
@@ -466,32 +517,4 @@ void makeDecision(float distances[3], bool leftWall, bool rightWall) {
     DEBUG_PRINTLN("[DECISION] → U-TURN (180°)\n");
     turnAround();
   }
-}/*```
-
----
-
-## Hardware Connections Summary
-```
-ESP32 Pin → Component
-=======================
-MOTORS:
-  25 → PWMA (Left Motor PWM)
-  26 → AIN1 (Left Motor Direction 1)
-  27 → AIN2 (Left Motor Direction 2)
-  14 → PWMB (Right Motor PWM)
-  32 → BIN1 (Right Motor Direction 1)
-  13 → BIN2 (Right Motor Direction 2)
-  33 → STBY (Motor Driver Standby)
-
-ULTRASONIC SENSORS (3):
-  18 → TRIG_LEFT
-  19 → ECHO_LEFT
-  21 → TRIG_CENTER
-  22 → ECHO_CENTER
-  4  → TRIG_RIGHT
-  5  → ECHO_RIGHT
-
-IR SENSORS:
-  34 → IR_LEFT
-  35 → IR_RIGHT
-  */
+}
