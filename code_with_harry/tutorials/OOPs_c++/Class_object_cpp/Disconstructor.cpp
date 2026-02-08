@@ -11,7 +11,7 @@ public:
     }
     ~dis()
     {
-        cout << "the Constructor is called and the number is :- " << count << endl;
+        cout << "the disConstructor is called and the number is :- " << count << endl;
         count--;
     }
 };

@@ -52,13 +52,19 @@ void Inventory_Management_System::sell_stock()
 void Inventory_Management_System::total_stock(int n, Inventory_Management_System I[])
 {
     int sum = 0;
+    float price_sum = 0;
     for (int i = 0; i < n; i++)
     {
         cout << "Item " << i + 1 << ": ";
 
         sum = sum + I[i].Quantity_in_stock;
+        price_sum = price_sum + (I[i].Price * I[i].Quantity_in_stock);
+        cout << I[i].Quantity_in_stock << endl
+             << "Item Price: " << I[i].Price << endl;
+        cout << "Item Value: " << I[i].Price * I[i].Quantity_in_stock << endl;
     }
     cout << "Total Stock Count: " << sum << endl;
+    cout << "Total Stock Value: " << price_sum << endl;
 }
 void Inventory_Management_System::display()
 {
@@ -87,7 +93,7 @@ int main()
     int choice;
     do
     {
-        cout << "Items created successfully!" << endl;
+
         cout << "1. Add details of an item" << endl;
         cout << "2. Sell Stock" << endl;
         cout << "3. Display Inventory" << endl;
@@ -113,21 +119,29 @@ int main()
             cin >> price;
             cout << "Enter Quantity in Stock: ";
             cin >> quantity;
-            if (ix >= 0 && ix < n)
-                I[ix] = Inventory_Management_System(id, name, price, quantity);
+            if (ix - 1 >= 0 && ix - 1 < n)
+            {
+                I[ix - 1] = Inventory_Management_System(id, name, price, quantity);
+            }
             else
+            {
                 cout << "Invalid index!" << endl;
-
-            break;
+            }
+            cout << "Item details added successfully!" << endl;
         }
+        break;
         case 2:
             cout << "Enter index of item to sell stock: ";
             int j;
             cin >> j;
-            if (j >= 0 && j < n)
-                I[j].sell_stock();
+            if (j - 1 >= 0 && j - 1 < n)
+            {
+                I[j - 1].sell_stock();
+            }
             else
+            {
                 cout << "Invalid index!" << endl;
+            }
             break;
         case 3:
             for (int i = 0; i < n; i++)
@@ -140,25 +154,27 @@ int main()
             I[n - 1].total_stock(n, I);
             break;
         case 5:
+        {
             cout << "Enter index of item to add stock: ";
             int i;
             cin >> i;
-            if (i >= 0 && i <= n)
+            if (i - 1 >= 0 && i - 1 < n)
             {
-                I[i].add_stock();
+                I[i - 1].add_stock();
             }
             else
             {
                 cout << "Invalid index!" << endl;
             }
-            break;
+        }
+        break;
         case 6:
             cout << "Exiting..." << endl;
             break;
         default:
             cout << "Invalid choice!" << endl;
         }
-    } while (choice != 5);
+    } while (choice != 6);
 
     return 0;
 }

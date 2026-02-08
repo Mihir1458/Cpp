@@ -31,8 +31,9 @@ class feild : public empolyee
 };
 int main()
 {
-    empolyee n1(2,1500);
+    empolyee n1(10,1500);
     feild n12(6,2,1521);
+    
+    cout<<"Id :-"<<n1.id<<endl; // here if i will not declare the type public then it will give error 
     cout<<"Id :-"<<n12.id<<endl; // here if i will not declare the type public then it will give error 
-
 }
