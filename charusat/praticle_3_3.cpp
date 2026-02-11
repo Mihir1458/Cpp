@@ -155,8 +155,8 @@ int main()
         {
         case 1:
         {
-            acc[n].add_new_account(acc);
-            n++;
+            
+            acc[Enhanced_Account_Tracking_System::getTotalAccounts()].add_new_account(acc);
             break;
         }
         case 2:
