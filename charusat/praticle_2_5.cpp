@@ -26,52 +26,56 @@ public:
         Annual_Interest_Rate = interest_rate;
         Loan_Tenure_Months = tenure;
     }
-    double calc_intrest()
-    {
-        double monthly_interest_rate = Annual_Interest_Rate / 12 / 100;
-        double emi = (Total_Loan_Amount * monthly_interest_rate * pow(1 + monthly_interest_rate, Loan_Tenure_Months)) / (pow(1 + monthly_interest_rate, Loan_Tenure_Months) - 1);
-        cout << "---------------------------------------------------------" << endl;
-        cout << " Total monthly EMI is: " << emi << endl;
-        cout << "Total Interest for Loan ID " << Loan_ID << " is: " << (emi * Loan_Tenure_Months) - Total_Loan_Amount << endl;
-        cout << "Total repayment for Loan ID " << Loan_ID << " is: " << (emi * Loan_Tenure_Months) << endl;
-        cout << "---------------------------------------------------------" << endl;
-        return (emi * Loan_Tenure_Months) - Total_Loan_Amount;
-    }
-    void display_details()
-    {
-        cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
-        cout << "Loan ID: " << Loan_ID << endl;
-        cout << "Applicant Name: " << Applicant_Name << endl;
-        cout << "Total Loan Amount: " << Total_Loan_Amount << endl;
-        cout << "Annual Interest Rate: " << Annual_Interest_Rate << "%" << endl;
-        cout << "Loan Tenure (Months): " << Loan_Tenure_Months << endl;
-        calc_intrest();
-    }
-
-    void higest_emi(int n, Loan_EMI_Management_System loans[])
-    {
-        double max_emi = 0;
-        double max_2_emi = 0;
-        int max_emi_index = 0;
-        for (int i = 0; i < n; i++)
-        {
-            double emi = loans[i].calc_intrest();
-            if (emi > max_emi)
-            {
-                max_2_emi = max_emi;
-                max_emi = emi;
-                max_emi_index = i;
-            }
-            else if (emi > max_2_emi && emi != max_emi)
-            {
-                max_2_emi = emi;
-            }
-        }
-        cout << "###################################################################" << endl;
-        cout << "Highest EMI is for Loan ID: " << loans[max_emi_index].Loan_ID << " with EMI: " << max_emi << endl;
-        cout << "Second Highest EMI is for Loan ID: " << loans[max_emi_index - 1].Loan_ID << " with EMI: " << max_2_emi << endl;
-    }
+    double calc_intrest();
+    void display_details();
+    void higest_emi(int n, Loan_EMI_Management_System loans[]);
 };
+
+double Loan_EMI_Management_System::calc_intrest()
+{
+    double monthly_interest_rate = Annual_Interest_Rate / 12 / 100;
+    double emi = (Total_Loan_Amount * monthly_interest_rate * pow(1 + monthly_interest_rate, Loan_Tenure_Months)) / (pow(1 + monthly_interest_rate, Loan_Tenure_Months) - 1);
+    cout << "---------------------------------------------------------" << endl;
+    cout << " Total monthly EMI is: " << emi << endl;
+    cout << "Total Interest for Loan ID " << Loan_ID << " is: " << (emi * Loan_Tenure_Months) - Total_Loan_Amount << endl;
+    cout << "Total repayment for Loan ID " << Loan_ID << " is: " << (emi * Loan_Tenure_Months) << endl;
+    cout << "---------------------------------------------------------" << endl;
+    return (emi * Loan_Tenure_Months) - Total_Loan_Amount;
+}
+void Loan_EMI_Management_System::display_details()
+{
+    cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+    cout << "Loan ID: " << Loan_ID << endl;
+    cout << "Applicant Name: " << Applicant_Name << endl;
+    cout << "Total Loan Amount: " << Total_Loan_Amount << endl;
+    cout << "Annual Interest Rate: " << Annual_Interest_Rate << "%" << endl;
+    cout << "Loan Tenure (Months): " << Loan_Tenure_Months << endl;
+    calc_intrest();
+}
+
+void Loan_EMI_Management_System::higest_emi(int n, Loan_EMI_Management_System loans[])
+{
+    double max_emi = 0;
+    double max_2_emi = 0;
+    int max_emi_index = 0;
+    for (int i = 0; i < n; i++)
+    {
+        double emi = loans[i].calc_intrest();
+        if (emi > max_emi)
+        {
+            max_2_emi = max_emi;
+            max_emi = emi;
+            max_emi_index = i;
+        }
+        else if (emi > max_2_emi && emi != max_emi)
+        {
+            max_2_emi = emi;
+        }
+    }
+    cout << "###################################################################" << endl;
+    cout << "Highest EMI is for Loan ID: " << loans[max_emi_index].Loan_ID << " with EMI: " << max_emi << endl;
+    cout << "Second Highest EMI is for Loan ID: " << loans[max_emi_index - 1].Loan_ID << " with EMI: " << max_2_emi << endl;
+}
 int main()
 {
     int n;
