@@ -4,87 +4,62 @@ using namespace std;
 class Calculator
 {
 private:
-    float results[50];  
-    int index = 0;
+    double results[100];
+    int index;
 
 public:
-    
+    Calculator()
+    {
+        index = 0;
+        cout << "Calculator Started " << endl;
+    }
 
     int add(int a, int b)
     {
         int res = a + b;
-        results[index++] = res;
+        storeResult(res);
         return res;
     }
 
     float add(float a, float b)
     {
         float res = a + b;
-        results[index++] = res;
+        storeResult(res);
         return res;
     }
 
-    float add(int a, float b)
+    int add(int a, int b, int c)
     {
-        float res = a + b;
-        results[index++] = res;
+        int res = a + b + c;
+        storeResult(res);
         return res;
     }
 
-    float add(float a, int b)
+    double add(double a, int b)
     {
-        float res = a + b;
-        results[index++] = res;
+        double res = a + b;
+        storeResult(res);
         return res;
     }
 
-    
-
-    int subtract(int a, int b)
+    double add(int a, double b)
     {
-        int res = a - b;
-        results[index++] = res;
+        double res = a + b;
+        storeResult(res);
         return res;
     }
 
-    float multiply(float a, float b)
+    void storeResult(double value)
     {
-        float res = a * b;
-        results[index++] = res;
-        return res;
+        results[index++] = value;
     }
 
-    float divide(float a, float b)
-    {
-        if (b == 0)
-        {
-            cout << "Error: Division by zero!" << endl;
-            return 0;
-        }
-        float res = a / b;
-        results[index++] = res;
-        return res;
-    }
-
-    
-    int add(int arr[], int size)
-    {
-        int sum = 0;
-        for (int i = 0; i < size; i++)
-        {
-            sum += arr[i];
-        }
-        results[index++] = sum;
-        return sum;
-    }
-
-    // Display results
     void displayResults()
     {
-        cout << "\nStored Results:\n";
+
         for (int i = 0; i < index; i++)
         {
-            cout << results[i] << endl;
+            cout << "Result " << i + 1 << ": " << results[i] << endl;
         }
     }
 };
@@ -92,19 +67,70 @@ public:
 int main()
 {
     Calculator calc;
+    int choice;
 
-    cout << "Addition (int): " << calc.add(5, 3) << endl;
-    cout << "Addition (float): " << calc.add(2.5f, 3.5f) << endl;
-    cout << "Addition (int + float): " << calc.add(5, 2.5f) << endl;
+    do
+    {
 
-    cout << "Subtraction: " << calc.subtract(10, 4) << endl;
-    cout << "Multiplication: " << calc.multiply(2.5f, 4.0f) << endl;
-    cout << "Division: " << calc.divide(10.0f, 2.0f) << endl;
+        cout << "1. Add two integers\n";
+        cout << "2. Add two floats\n";
+        cout << "3. Add three integers\n";
+        cout << "4. Add double and int\n";
+        cout << "5. Add int and double\n";
+        cout << "6. Show all results\n";
+        cout << "7. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
 
-    int arr[] = {1, 2, 3, 4};
-    cout << "Array Sum: " << calc.add(arr, 4) << endl;
+        int a, b, c;
+        float f1, f2;
+        double d;
 
-    calc.displayResults();
+        switch (choice)
+        {
+        case 1:
+            cout << "Enter two integers: ";
+            cin >> a >> b;
+            cout << "Result: " << calc.add(a, b) << endl;
+            break;
+
+        case 2:
+            cout << "Enter two floats: ";
+            cin >> f1 >> f2;
+            cout << "Result: " << calc.add(f1, f2) << endl;
+            break;
+
+        case 3:
+            cout << "Enter three integers: ";
+            cin >> a >> b >> c;
+            cout << "Result: " << calc.add(a, b, c) << endl;
+            break;
+
+        case 4:
+            cout << "Enter double and int: ";
+            cin >> d >> a;
+            cout << "Result: " << calc.add(d, a) << endl;
+            break;
+
+        case 5:
+            cout << "Enter int and double: ";
+            cin >> a >> d;
+            cout << "Result: " << calc.add(a, d) << endl;
+            break;
+
+        case 6:
+            calc.displayResults();
+            break;
+
+        case 7:
+            cout << "Thank you!\n";
+            break;
+
+        default:
+            cout << "Invalid choice\n";
+        }
+
+    } while (choice != 7);
 
     return 0;
 }
