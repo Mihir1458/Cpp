@@ -18,7 +18,7 @@ void max(t arr[],int n)
 template <typename T>
 void revse(T arr[],int n)
 {
-    // int n = sizeof(arr) / sizeof(arr[0]);
+    // int n = sizeof(arr) / sizeof(arr[0]); // used it before but when we pass the size of array is decaded to pointer so it will not work
     for (int i = 0; i < (n / 2); i++)
     {
         swap(arr[i], arr[n - i - 1]);
@@ -32,7 +32,7 @@ void revse(T arr[],int n)
 template <typename X>
 void leader(X arr[],int n)
 {
-    // int n = sizeof(arr) / sizeof(arr[0]);
+   
     int counter = 0;
     for (int i = 1; i < n; i++)
     

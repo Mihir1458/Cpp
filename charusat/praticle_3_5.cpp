@@ -1,46 +1,37 @@
 #include <iostream>
 using namespace std;
 
-
-int superDigit(long long n) {
-   
-    if (n < 10)
-        return n;
-
-    long long sum = 0;
-
-    
-    while (n > 0) {
-        sum += n % 10;
-        n /= 10;
-    }
-
-    
-    return superDigit(sum);
-}
-
-int main() {
+int main()
+{
     string n;
     int k;
 
     cout << "Enter number (as string): ";
     cin >> n;
 
-    cout << "Enter k (number of repetitions): ";
+    cout << "Enter k: ";
     cin >> k;
 
-    
-    long long initialSum = 0;
-    for (char c : n) {
-        initialSum += (c - '0');
+    long long sum = 0;
+
+    for (int i = 0; i < n.size(); i++)
+    {
+        sum = sum + (n[i] - '0');
     }
 
-    long long total = initialSum * k;
+    sum = sum * k;
 
- 
-    int result = superDigit(total);
-
-    cout << "Super Digit: " << result << endl;
+    while (sum > 9) // recursive also can be used
+    {
+        long long tempSum = 0;
+        while (sum > 0)
+        {
+            tempSum += sum % 10;
+            sum /= 10;
+        }
+        sum = tempSum;
+    }
+    cout << "Super Digit: " << sum;
 
     return 0;
 }

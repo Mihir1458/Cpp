@@ -12,8 +12,8 @@ private:
 public:
     Enhanced_Account_Tracking_System()
     {
-        account_number = "AC0000";
-        account_holder_name = "Default User";
+        account_number = "0000";
+        account_holder_name = "*******";
         balance = 0.0;
         transaction_count = 0;
         total_accounts++;
@@ -30,11 +30,11 @@ public:
         if (fee > 0 && fee <= balance)
         {
             balance -= fee;
-            cout << "Transaction fee of $" << fee << " applied." << endl;
+            cout << "Transaction fee " << fee << endl;
         }
         else
         {
-            cout << "Invalid fee amount or insufficient funds!" << endl;
+            cout << "Invalid " << endl;
         }
     }
     void displayAccountDetails()
@@ -50,11 +50,11 @@ public:
             balance += amount;
             cout << "Deposited: $" << amount << endl;
             transaction_count++;
-            transaction_fees(); // Apply transaction fee after deposit
+            transaction_fees();
         }
         else
         {
-            cout << "Invalid deposit amount!" << endl;
+            cout << "Invalid amount!" << endl;
         }
     }
     void withdraw(double amount)
@@ -64,11 +64,11 @@ public:
             balance -= amount;
             cout << "Withdrew: $" << amount << endl;
             transaction_count++;
-            transaction_fees(); // Apply transaction fee after deposit
+            transaction_fees();
         }
         else
         {
-            cout << "Invalid withdrawal amount or insufficient funds!" << endl;
+            cout << "insufficient funds!" << endl;
         }
     }
     void transfer(int n, Enhanced_Account_Tracking_System acc[], string target_account_number, double amount)
@@ -83,11 +83,11 @@ public:
                     acc[i].balance += amount;
                     cout << "Transfer successful!" << endl;
                     transaction_count++;
-                    transaction_fees(); // Apply transaction fee after deposit
+                    transaction_fees();
                 }
                 else
                 {
-                    cout << "Invalid transfer amount or insufficient funds!" << endl;
+                    cout << " insufficient funds!" << endl;
                 }
                 break;
             }
@@ -139,8 +139,8 @@ int main()
     int k;
     do
     {
-        cout << "*******************************************" << endl;
-        cout << "1. Add new account" << endl;
+
+        cout << "1. Add new account" << endl; // Not working proprly
         cout << "2. Add details of existing account" << endl;
         cout << "3. Display details of existing account" << endl;
         cout << "4. Deposit money" << endl;
@@ -153,10 +153,11 @@ int main()
         cin >> k;
         switch (k)
         {
+
         case 1:
         {
-            
-            acc[Enhanced_Account_Tracking_System::getTotalAccounts()].add_new_account(acc);
+
+            acc[Enhanced_Account_Tracking_System::getTotalAccounts()].add_new_account(acc); // Not working proprly logic incorrect
             break;
         }
         case 2:
