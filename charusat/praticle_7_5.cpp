@@ -60,6 +60,10 @@ public:
             cout << "Grade 'F' " << "and percentage is " << avg << "%" << endl;
         }
     }
+    ~UG()
+    {
+        cout << "Destructor called for UG student: " << name << endl;
+    }
 };
 class PG : public student
 {
@@ -95,19 +99,19 @@ public:
         float avg = total / 30.0;
         cout << "Name: " << name << endl;
         cout << "Roll No: " << roll << endl;
-        if (avg >= 90)
+        if (avg >= 9)
         {
             cout << "Grade 'O' " << "and CGPA is " << avg << endl;
         }
-        else if (avg >= 80)
+        else if (avg >= 8)
         {
             cout << "Grade 'A' " << "and CGPA  is " << avg << endl;
         }
-        else if (avg >= 70)
+        else if (avg >= 7)
         {
             cout << "Grade 'B' " << "and CGPA is " << avg << endl;
         }
-        else if (avg >= 60)
+        else if (avg >= 6)
         {
             cout << "Grade 'C' " << "and CGPA is " << avg << endl;
         }
@@ -115,6 +119,10 @@ public:
         {
             cout << "Grade 'D' " << "and CGPA is " << avg << endl;
         }
+    }
+    ~PG()
+    {
+        cout << "Destructor called for PG student: " << name << endl;
     }
 };
 int main()
