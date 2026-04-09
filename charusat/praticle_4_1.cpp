@@ -77,11 +77,11 @@ public:
         {
             if (arr[i] == val)
             {
-                cout << "Element found at position: " << i << endl;
+                cout << "number found at position: " << i << endl;
                 return;
             }
         }
-        cout << "Element not found\n";
+        cout << "number not found\n";
     }
     void count(int val)
     {
@@ -113,13 +113,11 @@ public:
 int main()
 {
     dynamicarray c1;
-    c1.insternew(10);
-    c1.display();
-    c1.insternew(20);
-    c1.display();
-    c1.insternew(30);
-    c1.display();
-    c1.insternew(40);
+
+    for (int i = 1; i <= 5; i++)
+    {
+        c1.insternew(i * 10);
+    }
     c1.display();
     c1.insternew(20);
     c1.display();
