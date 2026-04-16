@@ -1,81 +1,75 @@
-#include<iostream>
-#include<cmath>
+// p 5.1
+#include <iostream>
+#include <string>
+#include <cctype>   // for tolower()
+
 using namespace std;
 
-class Point {
-private:
-    int x, y;
+int main()
+{
+    string paragraph;
+    cout << "Enter a paragraph:\n";
+    getline(cin, paragraph);   // 1. Read full paragraph
 
-public:
-    // Constructor
-    Point(int x = 0, int y = 0) {
-        this->x = x;
-        this->y = y;
+    string words[100];         // store words
+    int freq[100] = {0};       // frequency array
+    int wordCount = 0;
+
+    string temp = "";
+
+    // 2. Extract words manually
+    for (int i = 0; i <= paragraph.length(); i++)
+    {
+        char ch = paragraph[i];
+
+        if (isalpha(ch))   // only letters
+        {
+            temp += tolower(ch);  // convert to lowercase
+        }
+        else
+        {
+            if (temp != "")
+            {
+                // 3. Check if word already exists
+                int found = -1;
+                for (int j = 0; j < wordCount; j++)
+                {
+                    if (words[j] == temp)
+                    {
+                        found = j;
+                        break;
+                    }
+                }
+
+                if (found == -1)
+                {
+                    words[wordCount] = temp;
+                    freq[wordCount] = 1;
+                    wordCount++;
+                }
+                else
+                {
+                    freq[found]++;
+                }
+
+                temp = "";
+            }
+        }
     }
 
-    // Chainable move function
-    Point& move(int dx, int dy) {
-        this->x += dx;
-        this->y += dy;
-        return *this;  // key for chaining
+    // 4. Output extracted words
+    cout << "\nExtracted Words:\n";
+    for (int i = 0; i < wordCount; i++)
+    {
+        cout << words[i] << " ";
     }
 
-    // Display
-    void display() {
-        cout << "Point: (" << x << ", " << y << ")" << endl;
+    // 5. Output frequencies
+    cout << "\n\nWord Frequencies:\n";
+    for (int i = 0; i < wordCount; i++)
+    {
+        cout << words[i] << " : " << freq[i] << endl;
     }
-
-    // Distance from origin
-    double distanceFromOrigin() {
-        return sqrt(x*x + y*y);
-    }
-
-    // Set absolute coordinates
-    void set(int newX, int newY) {
-        x = newX;
-        y = newY;
-    }
-
-    // Friend function (optional access)
-    friend void resetPoint(Point* p);
-};
-
-// Pass-by-reference using pointer
-void updatePoint(Point* p) {
-    p->move(5, 5); // modifies original object
-}
-
-// Reset function
-void resetPoint(Point* p) {
-    p->set(0, 0);
-}
-
-int main() {
-    Point p(1, 2);
-
-    cout << "Initial: ";
-    p.display();
-
-    // 🔹 Chaining (at least 3 moves)
-    p.move(2, 3).move(-1, 4).move(5, -2);
-
-    cout << "After chaining: ";
-    p.display();
-
-    // 🔹 Pass-by-pointer function
-    updatePoint(&p);
-
-    cout << "After update function: ";
-    p.display();
-
-    // 🔹 Distance
-    cout << "Distance from origin: " << p.distanceFromOrigin() << endl;
-
-    // 🔹 Reset
-    resetPoint(&p);
-
-    cout << "After reset: ";
-    p.display();
 
     return 0;
 }

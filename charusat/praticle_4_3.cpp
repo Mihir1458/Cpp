@@ -14,13 +14,13 @@ int main()
     int *A = new int[n];
     int *B = new int[m];
 
-    cout << "Enter elements of first sorted array:\n";
+    cout << "Enter elements of first sorted array:"<<endl;
     for (int i = 0; i < n; i++)
     {
         cin >> A[i];
     }
 
-    cout << "Enter elements of second sorted array:\n";
+    cout << "Enter elements of second sorted array:"<<endl;
     for (int i = 0; i < m; i++)
     {
         cin >> B[i];
@@ -39,7 +39,7 @@ int main()
     {
         C[k++] = B[j++];
     }
-    // Sort the merged array
+
     for (int i = 0; i < newsize - 1; i++)
     {
         for (int j = 0; j < newsize - i - 1; j++)
