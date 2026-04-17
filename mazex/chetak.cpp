@@ -390,7 +390,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 
   <!-- HEADER -->
   <header>
-    <div class="logo">ROVER<span>.</span>OS</div>
+    <div class="logo">CHETAK<span>.</span>OS</div>
     <span id="ws-badge" class="ws-badge">CONNECTING…</span>
   </header>
 
@@ -885,7 +885,7 @@ void setup() {
   Serial.begin(115200);
   delay(500);
   Serial.println();
-  Serial.println("ROVER.OS booting...");
+  Serial.println("CHETAK booting...");
 
   // --- Wi-Fi Access Point first, so CHETAK appears before rover hardware init ---
   WiFi.mode(WIFI_AP);
