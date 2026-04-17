@@ -1,0 +1,368 @@
+// this is the code run when car is in automatic mode 
+#include <DHT.h>
+
+// ============================================================================
+// DEBUG CONFIGURATION 
+// ============================================================================
+#define DEBUG_ENABLED true
+#define DEBUG_PRINT(x) if(DEBUG_ENABLED) Serial.print(x)
+#define DEBUG_PRINTLN(x) if(DEBUG_ENABLED) Serial.println(x)
+
+// ============================================================================
+// PIN DEFINITIONS
+// ============================================================================
+
+// Motor A (Left Motor)
+#define PWMA 25
+#define AIN1 26
+#define AIN2 27
+
+// Motor B (Right Motor)
+#define PWMB 14
+#define BIN1 32
+#define BIN2 13
+
+#define STBY 33
+
+// Ultrasonic
+#define TRIG_LEFT 18
+#define ECHO_LEFT 19
+#define TRIG_CENTER 22
+#define ECHO_CENTER 21
+#define TRIG_RIGHT 4
+#define ECHO_RIGHT 5
+
+// IR
+#define IR_LEFT 34
+#define IR_RIGHT 35
+
+// ===== NEW SENSORS =====
+#define DHT_PIN 23
+#define DHT_TYPE DHT11
+#define FLAME_PIN 15
+#define BUZZER_PIN 12
+
+DHT dht(DHT_PIN, DHT_TYPE);
+
+// ============================================================================
+// PWM CONFIGURATION
+// ============================================================================
+#define PWM_FREQ 12000
+#define PWM_RESOLUTION 8
+
+// ============================================================================
+// PARAMETERS
+// ============================================================================
+#define MOTOR_SPEED_L 210
+#define MOTOR_SPEED_R 196
+#define TURN_SPEED 220
+#define REVERSE_SPEED_L 169
+#define REVERSE_SPEED_R 215
+
+#define STOP_DISTANCE 23
+#define REVERSE_DISTANCE 11
+
+#define TURN_90_TIME 135
+#define TURN_IR 63
+#define REVERSE_TIME 120
+#define CHECK_INTERVAL 120
+
+// ===== HAZARD =====
+#define TEMP_THRESHOLD 45
+#define HUM_THRESHOLD 80
+#define SENSOR_INTERVAL 1000
+
+// ============================================================================
+// GLOBALS
+// ============================================================================
+unsigned long lastCheck = 0;
+unsigned long lastSensorRead = 0;
+
+float temperature = 0;
+float humidity = 0;
+bool flameDetected = false;
+bool hazardActive = false;
+
+// ============================================================================
+// SETUP
+// ============================================================================
+void setup() {
+  Serial.begin(115200);
+  delay(700);
+
+  pinMode(STBY, OUTPUT);
+  pinMode(AIN1, OUTPUT);
+  pinMode(AIN2, OUTPUT);
+  pinMode(BIN1, OUTPUT);
+  pinMode(BIN2, OUTPUT);
+
+  ledcAttach(PWMA, PWM_FREQ, PWM_RESOLUTION);
+  ledcAttach(PWMB, PWM_FREQ, PWM_RESOLUTION);
+  digitalWrite(STBY, HIGH);
+
+  pinMode(TRIG_LEFT, OUTPUT);
+  pinMode(ECHO_LEFT, INPUT);
+  pinMode(TRIG_CENTER, OUTPUT);
+  pinMode(ECHO_CENTER, INPUT);
+  pinMode(TRIG_RIGHT, OUTPUT);
+  pinMode(ECHO_RIGHT, INPUT);
+
+  pinMode(IR_LEFT, INPUT);
+  pinMode(IR_RIGHT, INPUT);
+
+  // ===== NEW INIT =====
+  pinMode(FLAME_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  dht.begin();
+
+  // Startup tone
+  tone(BUZZER_PIN, 1000, 200);
+  delay(250);
+  tone(BUZZER_PIN, 1500, 200);
+  delay(250);
+  noTone(BUZZER_PIN);
+
+  delay(1000);
+  startForward();
+}
+
+// ============================================================================
+// LOOP
+// ============================================================================
+void loop() {
+
+  checkHazards();
+
+  if (hazardActive) {
+    handleHazard();
+    return;
+  }
+
+  bool leftWall = !digitalRead(IR_LEFT);
+  bool rightWall = !digitalRead(IR_RIGHT);
+
+  if (millis() - lastCheck >= CHECK_INTERVAL) {
+    lastCheck = millis();
+
+    float distance = measureDistance(TRIG_CENTER, ECHO_CENTER);
+
+    if (rightWall && leftWall) {
+      stopMotors();
+      delay(30);
+      reverseMotors();
+      delay(REVERSE_TIME);
+      stopMotors();
+      delay(50);
+    }
+    else if (rightWall) {
+      digitalWrite(AIN1,HIGH );
+      digitalWrite(AIN2, LOW );
+      ledcWrite(PWMA, 100 );
+
+      digitalWrite(BIN1,LOW );
+      digitalWrite(BIN2,HIGH);
+      ledcWrite(PWMB, TURN_SPEED);
+
+      delay(TURN_IR);
+      startForward();
+    }
+    else if (leftWall) {
+      digitalWrite(AIN1, LOW);
+      digitalWrite(AIN2, HIGH);
+      ledcWrite(PWMA, 100 );
+
+      digitalWrite(BIN1,HIGH );
+      digitalWrite(BIN2, LOW);
+      ledcWrite(PWMB,TURN_SPEED );
+
+      delay(TURN_IR);
+      startForward();
+    }
+
+    if (distance > 0 && distance < STOP_DISTANCE) {
+
+      if (distance < REVERSE_DISTANCE) {
+        stopMotors();
+        delay(50);
+        reverseMotors();
+        delay(REVERSE_TIME);
+        stopMotors();
+        delay(50);
+      } else {
+        stopMotors();
+        delay(150);
+      }
+
+      float distances[3];
+      scanAllDirections(distances);
+
+      makeDecision(distances, leftWall, rightWall);
+
+      delay(150);
+      startForward();
+    }
+  }
+}
+
+// ============================================================================
+// HAZARD FUNCTIONS
+// ============================================================================
+void checkHazards() {
+  if (millis() - lastSensorRead >= SENSOR_INTERVAL) {
+    lastSensorRead = millis();
+
+    temperature = dht.readTemperature();
+    humidity = dht.readHumidity();
+    flameDetected = digitalRead(FLAME_PIN) == LOW;
+
+    Serial.print("Temp:");
+    Serial.print(temperature);
+    Serial.print(" Hum:");
+    Serial.print(humidity);
+    Serial.print(" Flame:");
+    Serial.println(flameDetected);
+
+    if (flameDetected || temperature > TEMP_THRESHOLD || humidity > HUM_THRESHOLD) {
+      hazardActive = true;
+    }
+  }
+}
+
+void handleHazard() {
+
+  tone(BUZZER_PIN, 2000);
+
+  stopMotors();
+  delay(100);
+
+  reverseMotors();
+  delay(REVERSE_TIME);
+  stopMotors();
+  delay(100);
+
+  turnAround();
+
+  float distances[3];
+  scanAllDirections(distances);
+
+  bool leftWall = !digitalRead(IR_LEFT);
+  bool rightWall = !digitalRead(IR_RIGHT);
+
+  makeDecision(distances, leftWall, rightWall);
+
+  noTone(BUZZER_PIN);
+  hazardActive = false;
+
+  delay(100);
+  startForward();
+}
+
+// ============================================================================
+// MOTOR FUNCTIONS
+// ============================================================================
+void startForward() {
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, LOW);
+  ledcWrite(PWMA, MOTOR_SPEED_L);
+
+  digitalWrite(BIN1, HIGH);
+  digitalWrite(BIN2, LOW);
+  ledcWrite(PWMB, MOTOR_SPEED_R);
+}
+
+void stopMotors() {
+  ledcWrite(PWMA, 0);
+  ledcWrite(PWMB, 0);
+}
+
+void reverseMotors() {
+  digitalWrite(AIN1, LOW);
+  digitalWrite(AIN2, HIGH);
+  ledcWrite(PWMA, REVERSE_SPEED_L);
+
+  digitalWrite(BIN1, LOW);
+  digitalWrite(BIN2, HIGH);
+  ledcWrite(PWMB, REVERSE_SPEED_R);
+}
+
+void turnLeft() {
+  digitalWrite(AIN1, LOW);
+  digitalWrite(AIN2, HIGH);
+  ledcWrite(PWMA, TURN_SPEED);
+
+  digitalWrite(BIN1, HIGH);
+  digitalWrite(BIN2, LOW);
+  ledcWrite(PWMB, TURN_SPEED);
+
+  delay(TURN_90_TIME);
+  stopMotors();
+}
+
+void turnRight() {
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, LOW);
+  ledcWrite(PWMA, TURN_SPEED);
+
+  digitalWrite(BIN1, LOW);
+  digitalWrite(BIN2, HIGH);
+  ledcWrite(PWMB, TURN_SPEED);
+
+  delay(TURN_90_TIME);
+  stopMotors();
+}
+
+void turnAround() {
+  turnRight();
+  turnRight();
+}
+
+// ============================================================================
+// SENSOR FUNCTIONS
+// ============================================================================
+float getSingleReading(int trigPin, int echoPin) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  long duration = pulseIn(echoPin, HIGH, 10000);
+  if (duration == 0) return 999;
+
+  return (duration / 2.0) * 0.0343;
+}
+
+float measureDistance(int trigPin, int echoPin) {
+  float a = getSingleReading(trigPin, echoPin);
+  delay(10);
+  float b = getSingleReading(trigPin, echoPin);
+  delay(10);
+  float c = getSingleReading(trigPin, echoPin);
+
+  return (a + b + c) / 3;
+}
+
+void scanAllDirections(float d[3]) {
+  delay(60);
+  d[0] = measureDistance(TRIG_LEFT, ECHO_LEFT);
+  delay(60);
+  d[1] = measureDistance(TRIG_CENTER, ECHO_CENTER);
+  delay(60);
+  d[2] = measureDistance(TRIG_RIGHT, ECHO_RIGHT);
+}
+
+void makeDecision(float d[3], bool leftWall, bool rightWall) {
+  float max = d[0];
+  if (d[1] > max) max = d[1];
+  if (d[2] > max) max = d[2];
+
+  if (d[1] >= max) {
+    return;
+  } else if (d[0] >= max) {
+    turnRight();
+  } else if (d[2] >= max) {
+    turnLeft();
+  } else {
+    turnAround();
+  }
+}
